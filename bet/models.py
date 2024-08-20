@@ -7,10 +7,16 @@ class Wager(models.Model):
     description = models.CharField(max_length=2000)
     pot = models.IntegerField()
 
+    def __str__(self):
+        return self.name
+
 class WagerOption(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=2000)
     wager = models.ForeignKey(Wager, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 class Bet(models.Model):
     option = models.ForeignKey(WagerOption, on_delete=models.CASCADE)
