@@ -2,10 +2,13 @@
     {% csrf_token %}
     <fieldset>
         <legend><h1>{{wager.name}}</h1></legend>
+        {% if no_option %}<p><strong>Please select an option</strong></p> {% endif %}
         {% for option in wager.wageroption_set.all %}
             <input type="radio" name="option" id="option{{ forloop.counter }}" value="{{option.id}}">
             <label for="option{{forloop.counter}}">{{option.name}}</label><br>
         {% endfor %}
+        {% if no_points %}<p><strong>You do not have the funds to make that bet!</strong></p>{% endif %}
+        {% if invalid_bet %}<p><strong>Please enter a valid bet!</strong></p>{% endif %}
         <input type="text" name="bet_value" id="value">
         <input type="submit" value="Make bet">
     </fieldset>

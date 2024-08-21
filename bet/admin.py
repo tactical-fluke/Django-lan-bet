@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Wager, WagerOption
+from .models import Wager, WagerOption, WagerUser, Bet
 
 # Register your models here.
 
@@ -15,4 +15,10 @@ class WagerView(admin.ModelAdmin):
     ]
     inlines = [OptionInline]
 
+class ReadOnly(admin.ModelAdmin):
+    def has_change_permission(self, request, obj = None) -> bool:
+        return False
+
 admin.site.register(Wager, WagerView)
+admin.site.register(WagerUser)
+admin.site.register(Bet, ReadOnly)
