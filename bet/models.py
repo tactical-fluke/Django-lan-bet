@@ -9,7 +9,7 @@ class WagerUser(AbstractUser):
 class Wager(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=2000)
-    pot = models.IntegerField()
+    pot = models.PositiveIntegerField()
 
     def __str__(self):
         return self.name

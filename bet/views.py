@@ -34,7 +34,7 @@ def place_bet(request, wager_id: int):
             "bet/wager.html",
             {
                 "wager": wager,
-                error_type.value: "a"
+                error_type.value: "a" # just need it to exist
             }
         )
 
