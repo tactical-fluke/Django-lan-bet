@@ -1,0 +1,12 @@
+<form action="{% url 'bet:place_bet' wager.id %}" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend><h1>{{wager.name}}</h1></legend>
+        {% for option in wager.wageroption_set.all %}
+            <input type="radio" name="option" id="option{{ forloop.counter }}" value="{{option.id}}">
+            <label for="option{{forloop.counter}}">{{option.name}}</label><br>
+        {% endfor %}
+        <input type="text" name="bet_value" id="value">
+        <input type="submit" value="Make bet">
+    </fieldset>
+</form>
