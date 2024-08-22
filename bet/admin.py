@@ -11,8 +11,9 @@ class OptionInline(admin.TabularInline):
 class WagerView(admin.ModelAdmin):
     model = Wager
     fieldsets = [
-        (None, {"fields": ["name", "description", "pot"]})
+        (None, {"fields": ["name", "description", "pot", "open"]})
     ]
+    readonly_fields = ["open"]
     inlines = [OptionInline]
 
 class ReadOnly(admin.ModelAdmin):
