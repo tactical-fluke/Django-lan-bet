@@ -1,3 +1,5 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'bet/style.css' %}">
 <form action="{% url 'bet:place_bet' wager.id %}" method="post">
     {% csrf_token %}
     <fieldset>
