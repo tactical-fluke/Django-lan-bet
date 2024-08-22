@@ -1,6 +1,7 @@
 from typing import Any
 from django.db.models.query import QuerySet
 from django.db.models import F
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.urls import reverse
@@ -19,6 +20,15 @@ class WagerListView(generic.ListView):
 class WagerDetailView(generic.DetailView):
     model = Wager
     template_name = 'bet/wager.html'
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        self.object = self.get_object()
+        try:
+            placed_bet = Bet.objects.get(user=request.user.id, wager=kwargs['pk'])
+        except:
+            placed_bet = None
+        context = self.get_context_data(object=self.object, placed_bet=placed_bet)
+        return self.render_to_response(context)
 
 
 
@@ -39,6 +49,8 @@ def place_bet(request, wager_id: int):
         )
 
     wager = get_object_or_404(Wager, pk=wager_id)
+    if bool(Bet.objects.filter(user=request.user.id, wager=wager_id)):
+        return HttpResponseForbidden()
     try:
         selected_option = wager.wageroption_set.get(pk=request.POST['option'])
     except (KeyError, WagerOption.DoesNotExist):
@@ -55,7 +67,7 @@ def place_bet(request, wager_id: int):
             if bet_value > user.balance:
                 return show_error(request, BetErrorType.NOT_ENOUGH_POINTS)
 
-            bet = Bet(option=selected_option, user=request.user, value=bet_value)
+            bet = Bet(option=selected_option, user=request.user, value=bet_value, wager=wager)
             bet.save()
             user.balance = F("balance") - bet_value
             user.save()

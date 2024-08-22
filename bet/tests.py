@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
-from .models import Wager, WagerOption, WagerUser
+from .models import Wager, WagerOption, WagerUser, Bet
 
 # Create your tests here.
 
@@ -33,6 +33,15 @@ class WagerViewTest(TestCase):
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
         response = self.client.get(reverse("bet:wager", args=(wager.id,)))
         self.assertContains(response, wager_option.name)
+
+    def test_wager_view_with_bet_already_placed(self):
+        user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
+        self.assertTrue(self.client.login(username='user', password='password'))
+        wager = Wager.objects.create(name="test wager", description="test description", pot=500)
+        wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
+        Bet.objects.create(user=user, option=wager_option, wager=wager, value=500)
+        response = self.client.get(reverse("bet:wager", args=(wager.id,)))
+        self.assertContains(response, "Already made a bet")
 
 class PlaceBetTest(TestCase):
     def test_create_valid_bet(self):
@@ -112,5 +121,22 @@ class PlaceBetTest(TestCase):
         user.refresh_from_db()
         self.assertEqual(user.balance, 2000)
         self.assertContains(response, "Please enter a valid bet!")
+
+    def test_place_bet_when_user_has_already_placed_bet(self):
+        user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
+        self.assertTrue(self.client.login(username='user', password='password'))
+        wager = Wager.objects.create(name="test wager", description="test description", pot=500)
+        wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
+        Bet.objects.create(user=user, option=wager_option, wager=wager, value=500)
+        response = self.client.post(
+            reverse("bet:place_bet", args=(wager.id,)),
+            {
+                "option": wager_option.id,
+                "bet_value": 500,
+            }
+        )
+        user.refresh_from_db()
+        self.assertEqual(user.balance, 2000)
+        self.assertEqual(response.status_code, 403)
 
         

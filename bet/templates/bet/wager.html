@@ -1,5 +1,8 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'bet/style.css' %}">
+{% if placed_bet %}
+<p><strong>Already made a bet</strong></p>
+{% else %}
 <form action="{% url 'bet:place_bet' wager.id %}" method="post">
     {% csrf_token %}
     <fieldset>
@@ -15,3 +18,4 @@
         <input type="submit" value="Make bet">
     </fieldset>
 </form>
+{% endif %}

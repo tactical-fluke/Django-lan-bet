@@ -24,6 +24,7 @@ class WagerOption(models.Model):
 
 class Bet(models.Model):
     option = models.ForeignKey(WagerOption, on_delete=models.CASCADE)
+    wager = models.ForeignKey(Wager, on_delete=models.CASCADE)
     user = models.ForeignKey(WagerUser, on_delete=models.CASCADE)
     value = models.PositiveIntegerField()
 
