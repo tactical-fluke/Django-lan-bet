@@ -16,7 +16,7 @@ def wager_bet_form(wager: int | Wager, user: WagerUser):
 
     class WagerBetForm(forms.Form):
         selected_option = forms.TypedChoiceField(
-            choices=map(lambda wager: (wager.id, wager.name), wager.wageroption_set.all()),
+            choices=map(lambda option: (option.id, option.name), wager.wageroption_set.all()),
             coerce=lambda id: WagerOption.objects.get(pk=int(id)),
             widget=forms.widgets.RadioSelect()
         )
@@ -24,3 +24,15 @@ def wager_bet_form(wager: int | Wager, user: WagerUser):
 
     return WagerBetForm
         
+def wager_resolve_form(wager: int | Wager):
+    wager = Wager.objects.get(pk=wager) if isinstance(wager, int) else wager
+
+    class WagerResolveForm(forms.Form):
+        selected_option = forms.TypedChoiceField(
+            choices=map(lambda option: (option.id, option.name), wager.wageroption_set.all()),
+            coerce=lambda id: WagerOption.objects.get(pk=int(id)),
+            widget=forms.widgets.RadioSelect(),
+            label="Winning option"
+        )
+
+    return WagerResolveForm

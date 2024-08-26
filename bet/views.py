@@ -5,8 +5,9 @@ from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.urls import reverse
+from django.contrib.admin.views.decorators import staff_member_required
 from .models import Wager, WagerOption, Bet, WagerUser
-from .forms import wager_bet_form
+from .forms import wager_bet_form, wager_resolve_form
 
 from enum import Enum
 
@@ -62,4 +63,26 @@ def place_bet(request, wager_id: int):
                 "form": form,
             }
         )
+    
+@staff_member_required
+def resolve_wager_view(request, wager_id: int):
+    wager = get_object_or_404(Wager, pk=wager_id)
+    if request.method == "GET":
+        form = wager_resolve_form(wager)()
+    else:
+        form = wager_resolve_form(wager)(data=request.POST)
+        if form.is_valid():
+            winning_option: WagerOption = form.cleaned_data["selected_option"]
+            winning_ratio = float(wager.total_wager_value()) / float(winning_option.option_total_value())
+            for bet in winning_option.bet_set.all():
+                user: WagerUser = bet.user
+                user.balance = F('balance') + (bet.value * winning_ratio)
+                user.save()
+            wager.resolved = True
+            wager.open = False
+            wager.save()
+            return redirect(reverse('bet:home'))
+        
+    return render(request, "bet/wager_resolve.html",context={"wager": wager, "form": form})
+    
     

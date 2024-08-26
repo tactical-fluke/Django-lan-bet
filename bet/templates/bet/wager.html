@@ -1,6 +1,8 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'bet/style.css' %}">
-{% if placed_bet %}
+{% if not wager.open %}
+<p><strong>Bet has closed!</strong></p>
+{% elif placed_bet %}
 <p><strong>Already made a bet</strong></p>
 {% else %}
 <form action="{% url 'bet:place_bet' wager.id %}" method="post">

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, User
+from functools import reduce
 
 # Create your models here.
 
@@ -11,9 +12,13 @@ class Wager(models.Model):
     description = models.CharField(max_length=2000)
     pot = models.PositiveIntegerField()
     open = models.BooleanField(default=True)
+    resolved = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
+    
+    def total_wager_value(self):
+        return self.pot + reduce(int.__add__, map(WagerOption.option_total_value, self.wageroption_set.all()))
 
 class WagerOption(models.Model):
     name = models.CharField(max_length=200)
@@ -22,6 +27,9 @@ class WagerOption(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def option_total_value(self):
+        return reduce(int.__add__, map(lambda bet: bet.value, self.bet_set.all()), 0)
 
 class Bet(models.Model):
     option = models.ForeignKey(WagerOption, on_delete=models.CASCADE)
