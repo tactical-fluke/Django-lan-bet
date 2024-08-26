@@ -111,7 +111,7 @@ class PlaceBetTest(TestCase):
         response = self.client.post(
             reverse("bet:place_bet", args=(wager.id,)),
             {
-                "option": wager_option.id,
+                "selected_option": wager_option.id,
                 "bet_value": -20,
             }
         )
@@ -127,7 +127,7 @@ class PlaceBetTest(TestCase):
         response = self.client.post(
             reverse("bet:place_bet", args=(wager.id,)),
             {
-                "option": wager_option.id,
+                "selected_option": wager_option.id,
                 "bet_value": 3000,
             }
         )
@@ -144,7 +144,7 @@ class PlaceBetTest(TestCase):
         response = self.client.post(
             reverse("bet:place_bet", args=(wager.id,)),
             {
-                "option": wager_option.id,
+                "selected_option": wager_option.id,
                 "bet_value": 500,
             }
         )
@@ -152,4 +152,42 @@ class PlaceBetTest(TestCase):
         self.assertEqual(user.balance, 2000)
         self.assertEqual(response.status_code, 403)
 
+class WagerResolutionTests(TestCase):
+    def test_staff_can_access_wager_resolution(self):
+        user = WagerUser.objects.create_user('user', email='email@email.com', password='password', is_staff=True)
+        self.assertTrue(self.client.login(username='user', password='password'))
+        wager = Wager.objects.create(name="test wager", description="test description", pot=500)
+        response = self.client.get(reverse("bet:resolve_bet", args=(wager.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_cannot_access_wager_resolution(self):
+        user = WagerUser.objects.create_user('user', email='email@email.com', password='password', is_staff=False)
+        self.assertTrue(self.client.login(username='user', password='password'))
+        wager = Wager.objects.create(name="test wager", description="test description", pot=500)
+        response = self.client.get(reverse("bet:resolve_bet", args=(wager.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def test_resolve_wager(self):
+        user1 = WagerUser.objects.create_user('user1', email='email1@email.com', password='password', is_staff=True)
+        self.assertTrue(self.client.login(username='user1', password='password'))
+        user2 = WagerUser.objects.create_user('user2', email='email2@email.com', password='password', is_staff=False)
+        wager = Wager.objects.create(name="test wager", description="test description", pot=500)
+        wager_option1 = WagerOption.objects.create(name="test option1", description="a test option1", wager=wager)
+        wager_option2 = WagerOption.objects.create(name="test option2", description="a test option2", wager=wager)
+        Bet.objects.create(user=user1, option=wager_option1, wager=wager, value=500)
+        Bet.objects.create(user=user2, option=wager_option2, wager=wager, value=500)
+        response = self.client.post(
+            reverse('bet:resolve_bet', args=(wager.id,)),
+            {
+                "selected_option": wager_option1.id
+            }
+        )
+        self.assertEqual(response.status_code, 302)
+        user1.refresh_from_db()
+        self.assertEqual(user1.balance, 3500)
+        user2.refresh_from_db()
+        self.assertEqual(user2.balance, 2000)
+        wager.refresh_from_db()
+        self.assertFalse(wager.open)
+        self.assertTrue(wager.resolved)
         
