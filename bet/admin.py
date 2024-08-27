@@ -1,5 +1,5 @@
-from django.contrib import admin
-
+from django.contrib import admin, messages
+from django.utils.translation import ngettext
 from .models import Wager, WagerOption, WagerUser, Bet
 
 # Register your models here.
@@ -15,6 +15,20 @@ class WagerView(admin.ModelAdmin):
     ]
     readonly_fields = ["open", "resolved"]
     inlines = [OptionInline]
+    actions = ['close_bet']
+
+    @admin.action(description="Close selected wagers")
+    def close_bet(self, request, queryset):
+        updated = queryset.update(open=False)
+        self.message_user(
+            request,
+            ngettext(
+                "%d wager was successfully closed.",
+                "%d wagers were successfully closed.",
+                updated
+            ) % updated,
+            messages.SUCCESS,
+        )
 
 class ReadOnly(admin.ModelAdmin):
     def has_change_permission(self, request, obj = None) -> bool:
