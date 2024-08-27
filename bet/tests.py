@@ -68,12 +68,21 @@ class WagerBetFormtest(TestCase):
 class WagerViewTest(TestCase):
     def test_view_wager(self):
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
+        user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
+        self.assertTrue(self.client.login(username='user', password='password'))
         response = self.client.get(reverse("bet:wager", args=(wager.id,)))
         self.assertContains(response, "Make bet")
+
+    def test_cannot_view_wager_not_logged_in(self):
+        wager = Wager.objects.create(name="test wager", description="test description", pot=500)
+        response = self.client.get(reverse("bet:wager", args=(wager.id,)))
+        self.assertEqual(response.status_code, 302)
 
     def test_wager_view_contains_option(self):
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
+        user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
+        self.assertTrue(self.client.login(username='user', password='password'))
         response = self.client.get(reverse("bet:wager", args=(wager.id,)))
         self.assertContains(response, wager_option.name)
 

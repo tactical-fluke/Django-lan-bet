@@ -6,12 +6,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from .models import Wager, WagerOption, Bet, WagerUser
 from .forms import wager_bet_form, wager_resolve_form
 
-from enum import Enum
-
-# Create your views here.
 class WagerListView(generic.ListView):
     context_object_name = 'all_wagers'
     template_name = 'bet/home.html'
@@ -20,6 +18,7 @@ class WagerListView(generic.ListView):
         return Wager.objects.all()
     
 
+@login_required
 def wager_view(request, wager_id: int):
     wager = get_object_or_404(Wager, pk=wager_id)
     user = request.user
@@ -35,6 +34,7 @@ def wager_view(request, wager_id: int):
         "placed_bet": placed_bet,
     })
 
+@login_required
 def place_bet(request, wager_id: int):
     wager = get_object_or_404(Wager, pk=wager_id)
     user: WagerUser = request.user
