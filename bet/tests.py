@@ -1,8 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from .models import Wager, WagerOption, WagerUser, Bet
-from .forms import wager_bet_form
-
+from .forms import BetForm
 # Create your tests here.
 
 class HomeViewTest(TestCase):
@@ -27,42 +26,42 @@ class WagerBetFormtest(TestCase):
         user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
-        form = wager_bet_form(wager, user)(data={"selected_option": wager_option.id, "bet_value": 500})
+        form = BetForm(wager, user, data={"selected_option": wager_option.id, "bet_value": 500})
         self.assertTrue(form.is_valid())
 
     def test_invalid_option(self):
         user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
         WagerOption.objects.create(name="test option", description="a test option", wager=wager)
-        form = wager_bet_form(wager, user)(data={"selected_option": 9999, "bet_value": 500})
+        form = BetForm(wager, user, data={"selected_option": 9999, "bet_value": 500})
         self.assertFalse(form.is_valid())
 
     def test_ascii_bet_value(self):
         user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
-        form = wager_bet_form(wager, user)(data={"selected_option": wager_option.id, "bet_value": "asd"})
+        form = BetForm(wager, user, data={"selected_option": wager_option.id, "bet_value": "asd"})
         self.assertFalse(form.is_valid())
 
     def test_negative_bet_value(self):
         user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
-        form = wager_bet_form(wager, user)(data={"selected_option": wager_option.id, "bet_value": -500})
+        form = BetForm(wager, user, data={"selected_option": wager_option.id, "bet_value": -500})
         self.assertFalse(form.is_valid())
 
     def test_no_option(self):
         user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
-        form = wager_bet_form(wager, user)(data={"bet_value": 500})
+        form = BetForm(wager, user, data={"bet_value": 500})
         self.assertFalse(form.is_valid())
 
     def test_no_bet_value(self):
         user = WagerUser.objects.create_user('user', email='email@email.com', password='password')
         wager = Wager.objects.create(name="test wager", description="test description", pot=500)
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
-        form = wager_bet_form(wager, user)(data={"selected_option": wager_option.id})
+        form = BetForm(wager, user, data={"selected_option": wager_option.id})
         self.assertFalse(form.is_valid())
 
 class WagerViewTest(TestCase):

@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from .models import Wager, WagerOption, Bet, WagerUser
-from .forms import wager_bet_form, wager_resolve_form
+from .forms import OptionForm, BetForm
 
 class WagerListView(generic.ListView):
     context_object_name = 'all_wagers'
@@ -22,7 +22,7 @@ class WagerListView(generic.ListView):
 def wager_view(request, wager_id: int):
     wager = get_object_or_404(Wager, pk=wager_id)
     user = request.user
-    form = wager_bet_form(wager, user)()
+    form = BetForm(wager, user)
     try:
         placed_bet = Bet.objects.get(user=request.user.id, wager=wager_id)
     except:
@@ -42,8 +42,7 @@ def place_bet(request, wager_id: int):
     if bool(Bet.objects.filter(user=user.id, wager=wager_id)):
         return HttpResponseForbidden()
     
-    form = wager_bet_form(wager, request.user)
-    form = form(data=request.POST)
+    form = BetForm(wager, user, data=request.POST)
     if form.is_valid():
         cleaned_data = form.cleaned_data
         option = cleaned_data['selected_option']
@@ -68,11 +67,11 @@ def place_bet(request, wager_id: int):
 def resolve_wager_view(request, wager_id: int):
     wager = get_object_or_404(Wager, pk=wager_id)
     if request.method == "GET":
-        form = wager_resolve_form(wager)()
+        form = OptionForm(wager_instance=wager)
     else:
-        form = wager_resolve_form(wager)(data=request.POST)
+        form = OptionForm(wager_instance=wager, data=request.POST)
         if form.is_valid():
-            winning_option: WagerOption = form.cleaned_data["selected_option"]
+            winning_option: WagerOption = WagerOption.objects.get(pk=int(form.cleaned_data["wager"]))
             winning_ratio = float(wager.total_wager_value()) / float(winning_option.option_total_value())
             for bet in winning_option.bet_set.all():
                 user: WagerUser = bet.user
