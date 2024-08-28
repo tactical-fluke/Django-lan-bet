@@ -1,10 +1,24 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'bet/style.css' %}">
+{% if not wager.open or placed_bet %}
 {% if not wager.open %}
 <p><strong>Bet has closed!</strong></p>
-{% elif placed_bet %}
-<p><strong>Already made a bet</strong></p>
-{% else %}
+{% endif %}
+{% if placed_bet %}
+<h2>Your bet:</h2>
+<p>voted for option: {{ placed_bet.option }}</p>
+<p>with value: {{ placed_bet.value }}</p>
+{% endif %}
+{% endif %}
+<h2>Option stats</h2>
+<p>pot: {{ wager.pot }}</p>
+{% for option in options %}
+<h3>{{ option.name }}</h3>
+<p>Payout: {{ option.winning_ratio }}:1</p>
+<p>option value: {{ option.total_value }}</p>
+<p>percent of bets: {{ option.percent_bets }}</p>
+{% endfor %}
+{% if wager.open and not placed_bet %}
 <form action="{% url 'bet:place_bet' wager.id %}" method="post">
     {% csrf_token %}
     {{ form }}

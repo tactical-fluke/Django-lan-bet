@@ -22,6 +22,7 @@ class WagerListView(generic.ListView):
 @login_required
 def wager_view(request, wager_id: int):
     wager = get_object_or_404(Wager, pk=wager_id)
+    options = wager.wageroption_set.all()
     user = request.user
     form = BetForm(wager, user)
     try:
@@ -33,6 +34,7 @@ def wager_view(request, wager_id: int):
         "wager": wager,
         "form": form,
         "placed_bet": placed_bet,
+        "options": options,
     })
 
 @login_required
@@ -66,9 +68,9 @@ def place_bet(request, wager_id: int):
     
 def _resolve_wager(winning_option: WagerOption):
     wager = winning_option.wager
-    winning_option_value = float(winning_option.option_total_value())
+    winning_option_value = float(winning_option.total_value())
     if winning_option_value > 0.0:
-        winning_ratio = float(wager.total_wager_value()) / winning_option_value
+        winning_ratio = float(wager.total_value()) / winning_option_value
         for bet in winning_option.bet_set.all():
             user: WagerUser = bet.user
             user.balance = F('balance') + (bet.value * winning_ratio)
