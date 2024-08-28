@@ -18,7 +18,7 @@ class BetForm(forms.Form):
     def __init__(self, wager_instance: Wager, wager_user: WagerUser, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["selected_option"] = forms.TypedChoiceField(
-            choices=map(lambda option: (option.id, option.name), wager_instance.wageroption_set.all()),
+            choices=[(option.id, option.name) for option in wager_instance.wageroption_set.all()],
             coerce=lambda id: WagerOption.objects.get(pk=int(id)),
             widget=forms.widgets.RadioSelect()
         )
@@ -33,7 +33,7 @@ class OptionForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.initial['wager_instance_id'] = wager_instance.id
         self.fields['selected_option'] = self.fields["selected_option"] = forms.TypedChoiceField(
-            choices=map(lambda option: (option.id, option.name), wager_instance.wageroption_set.all()),
+            choices=[(option.id, option.name) for option in wager_instance.wageroption_set.all()],
             coerce=lambda id: WagerOption.objects.get(pk=int(id)),
             widget=forms.widgets.RadioSelect()
         )
