@@ -111,7 +111,7 @@ def resolve_wagers_view(request):
             for form in forms.forms:
                 winning_option = form.cleaned_data['selected_option']
                 resolve_wager(winning_option)
-                redirect('bet:home')
+            return redirect('bet:home')
         else:
             print(forms.errors)
 

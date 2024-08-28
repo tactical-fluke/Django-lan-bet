@@ -227,6 +227,7 @@ class WagerResolutionTests(TestCase):
             "form-1-selected_option": wager_option4.id,
         }
         response = self.client.post(reverse('bet:multi_resolve_wager'), data)
+        self.assertEqual(response.status_code, 302)
         user1.refresh_from_db()
         user2.refresh_from_db()
         self.assertEqual(user1.balance, 3500)
