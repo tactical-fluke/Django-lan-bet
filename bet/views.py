@@ -71,7 +71,7 @@ def resolve_wager_view(request, wager_id: int):
     else:
         form = OptionForm(wager_instance=wager, data=request.POST)
         if form.is_valid():
-            winning_option: WagerOption = WagerOption.objects.get(pk=int(form.cleaned_data["wager"]))
+            winning_option: WagerOption = form.cleaned_data["selected_option"]
             winning_ratio = float(wager.total_wager_value()) / float(winning_option.option_total_value())
             for bet in winning_option.bet_set.all():
                 user: WagerUser = bet.user

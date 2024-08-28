@@ -24,14 +24,13 @@ class BetForm(forms.Form):
         )
         self.fields["bet_value"] = forms.IntegerField(validators=[partial(validate_user_has_enough_points_for_bet, wager_user), validate_non_negative])
 
-class OptionForm(forms.ModelForm):
-    class Meta:
-        model = WagerOption
-        fields = ['wager']
-        widgets = {
-            "wager": forms.RadioSelect
-        }
+class OptionForm(forms.Form):
+    selected_option = forms.ChoiceField(widget=forms.widgets.RadioSelect())
 
     def __init__(self, wager_instance: Wager, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["wager"].queryset = WagerOption.objects.filter(wager=wager_instance) 
+        self.fields['selected_option'] = self.fields["selected_option"] = forms.TypedChoiceField(
+            choices=map(lambda option: (option.id, option.name), wager_instance.wageroption_set.all()),
+            coerce=lambda id: WagerOption.objects.get(pk=int(id)),
+            widget=forms.widgets.RadioSelect()
+        )
