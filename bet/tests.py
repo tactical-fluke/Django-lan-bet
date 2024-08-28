@@ -187,6 +187,7 @@ class WagerResolutionTests(TestCase):
         response = self.client.post(
             reverse('bet:resolve_bet', args=(wager.id,)),
             {
+                "wager_instance_id": wager.id,
                 "selected_option": wager_option1.id
             }
         )
@@ -198,4 +199,41 @@ class WagerResolutionTests(TestCase):
         wager.refresh_from_db()
         self.assertFalse(wager.open)
         self.assertTrue(wager.resolved)
+
+    def test_resolve_multi_wager(self):
+        user1 = WagerUser.objects.create_user('user1', email='email1@email.com', password='password', is_staff=True)
+        self.assertTrue(self.client.login(username='user1', password='password'))
+        user2 = WagerUser.objects.create_user('user2', email='email2@email.com', password='password', is_staff=False)
+        wager1 = Wager.objects.create(name="test wager", description="test description", pot=500)
+
+        wager_option1 = WagerOption.objects.create(name="test option1", description="a test option1", wager=wager1)
+        wager_option2 = WagerOption.objects.create(name="test option2", description="a test option2", wager=wager1)
+        Bet.objects.create(user=user1, option=wager_option1, wager=wager1, value=500)
+        Bet.objects.create(user=user2, option=wager_option2, wager=wager1, value=500)
+
+        wager2 = Wager.objects.create(name="test wager2", description="test description2", pot=500)
+        wager_option3 = WagerOption.objects.create(name="test option3", description="a test option3", wager=wager2)
+        wager_option4 = WagerOption.objects.create(name="test option4", description="a test option4", wager=wager2)
+        Bet.objects.create(user=user1, option=wager_option3, wager=wager2, value=500)
+        Bet.objects.create(user=user2, option=wager_option4, wager=wager2, value=500)
+        data = {
+            "form-TOTAL_FORMS": 2,
+            "form-MIN_NUM_FORMS": 1,
+            "form-INITIAL_FORMS": 0,
+            "form-MAX_NUM_FORMS": 1000,
+            "form-0-wager_instance_id": wager1.id,
+            "form-0-selected_option": wager_option1.id,
+            "form-1-wager_instance_id": wager2.id,
+            "form-1-selected_option": wager_option4.id,
+        }
+        response = self.client.post(reverse('bet:multi_resolve_wager'), data)
+        user1.refresh_from_db()
+        user2.refresh_from_db()
+        self.assertEqual(user1.balance, 3500)
+        self.assertEqual(user2.balance, 3500)
+        wager1.refresh_from_db()
+        wager2.refresh_from_db()
+        self.assertFalse(wager1.open or wager2.open)
+        self.assertTrue(wager1.resolved and wager2.resolved)
+        
         

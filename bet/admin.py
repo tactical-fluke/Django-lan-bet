@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from django.utils.translation import ngettext
+from django.shortcuts import redirect
 from .models import Wager, WagerOption, WagerUser, Bet
 
 # Register your models here.
@@ -15,7 +16,7 @@ class WagerView(admin.ModelAdmin):
     ]
     readonly_fields = ["open", "resolved"]
     inlines = [OptionInline]
-    actions = ['close_bet']
+    actions = ['close_bet', 'resolve_wagers']
 
     @admin.action(description="Close selected wagers")
     def close_bet(self, request, queryset):
@@ -29,6 +30,13 @@ class WagerView(admin.ModelAdmin):
             ) % updated,
             messages.SUCCESS,
         )
+
+    @admin.action(description="Resolve selected wagers")
+    def resolve_wagers(self, request, queryset):
+        selected = queryset.values_list("pk", flat=True)
+        url = "/bet/resolve/?%s" % "".join(f"wager={pk}&" for pk in selected)
+        url = url[0:-1] # Remove final &
+        return redirect(url)
 
 class ReadOnly(admin.ModelAdmin):
     def has_change_permission(self, request, obj = None) -> bool:

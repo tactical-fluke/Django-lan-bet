@@ -7,8 +7,9 @@ from django.views import generic
 from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
+from django.forms import formset_factory
 from .models import Wager, WagerOption, Bet, WagerUser
-from .forms import OptionForm, BetForm
+from .forms import OptionForm, BetForm, InstanceFormSet
 
 class WagerListView(generic.ListView):
     context_object_name = 'all_wagers'
@@ -63,25 +64,61 @@ def place_bet(request, wager_id: int):
             }
         )
     
+def resolve_wager(winning_option: WagerOption):
+    wager = winning_option.wager
+    winning_option_value = float(winning_option.option_total_value())
+    if winning_option_value > 0.0:
+        winning_ratio = float(wager.total_wager_value()) / winning_option_value
+        for bet in winning_option.bet_set.all():
+            user: WagerUser = bet.user
+            user.balance = F('balance') + (bet.value * winning_ratio)
+            user.save()
+    wager.resolved = True
+    wager.open = False
+    wager.save()
+    
 @staff_member_required
 def resolve_wager_view(request, wager_id: int):
     wager = get_object_or_404(Wager, pk=wager_id)
     if request.method == "GET":
-        form = OptionForm(wager_instance=wager)
+        form = OptionForm(instance=wager)
     else:
-        form = OptionForm(wager_instance=wager, data=request.POST)
+        form = OptionForm(instance=wager, data=request.POST)
         if form.is_valid():
             winning_option: WagerOption = form.cleaned_data["selected_option"]
-            winning_ratio = float(wager.total_wager_value()) / float(winning_option.option_total_value())
-            for bet in winning_option.bet_set.all():
-                user: WagerUser = bet.user
-                user.balance = F('balance') + (bet.value * winning_ratio)
-                user.save()
-            wager.resolved = True
-            wager.open = False
-            wager.save()
+            resolve_wager(winning_option)
             return redirect(reverse('bet:home'))
         
     return render(request, "bet/wager_resolve.html",context={"wager": wager, "form": form})
-    
-    
+
+@staff_member_required
+def resolve_wagers_view(request):
+    if request.method == "GET":
+        wager_ids = request.GET.getlist('wager')
+        wagers = list(map(lambda id: get_object_or_404(Wager, pk=id), wager_ids))
+        Formset = formset_factory(form=OptionForm, formset=InstanceFormSet, min_num=len(wagers)-1)
+        forms = Formset(instances=wagers, )
+    else:
+        total_forms = int(request.POST['form-TOTAL_FORMS'])
+        wager_instance_ids = []
+        for i in range(total_forms):
+            instance_id = int(request.POST[f"form-{i}-wager_instance_id"])
+            wager_instance_ids.append(instance_id)
+        wagers = list(map(lambda id: get_object_or_404(Wager, pk=id), wager_instance_ids))
+        Formset = formset_factory(form=OptionForm, formset=InstanceFormSet, min_num=len(wagers)-1)
+        forms = Formset(instances=wagers, data=request.POST)
+        if forms.is_valid():
+            for form in forms.forms:
+                winning_option = form.cleaned_data['selected_option']
+                resolve_wager(winning_option)
+                redirect('bet:home')
+        else:
+            print(forms.errors)
+
+    return render(
+        request,
+        "bet/multi_resolve_wager.html",
+        context={
+            "forms": forms
+        }
+    )

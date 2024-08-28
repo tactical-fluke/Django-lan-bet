@@ -1,0 +1,7 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'bet/style.css' %}">
+<form action="{% url 'bet:multi_resolve_wager' %}" method="post">
+    {% csrf_token %}
+    {{ forms }}
+    <input type="submit" value="Resolve Bet">
+</form>
