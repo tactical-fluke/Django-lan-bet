@@ -34,8 +34,7 @@ class WagerView(admin.ModelAdmin):
     @admin.action(description="Resolve selected wagers")
     def resolve_wagers(self, request, queryset):
         selected = queryset.values_list("pk", flat=True)
-        url = "/bet/resolve/?%s" % "".join(f"wager={pk}&" for pk in selected)
-        url = url[0:-1] # Remove final &
+        url = "/bet/resolve/?%s" % "&".join(f"wager={pk}" for pk in selected)
         return redirect(url)
 
 class ReadOnly(admin.ModelAdmin):
