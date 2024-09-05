@@ -10,6 +10,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    environment: Actions Environment
     strategy:
       max-parallel: 4
       matrix:
@@ -26,7 +27,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Run Tests
-      run: python manage.py test\
-      environment: Actions Environment
+      run: python manage.py test
       env:
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
