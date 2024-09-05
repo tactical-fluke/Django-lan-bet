@@ -92,7 +92,7 @@ class WagerViewTest(TestCase):
         wager_option = WagerOption.objects.create(name="test option", description="a test option", wager=wager)
         Bet.objects.create(user=user, option=wager_option, wager=wager, value=500)
         response = self.client.get(reverse("bet:wager", args=(wager.id,)))
-        self.assertContains(response, "Already made a bet")
+        self.assertContains(response, "Your bet:")
 
 class PlaceBetTest(TestCase):
     def test_create_valid_bet(self):
