@@ -40,6 +40,9 @@ def wager_view(request, wager_id: int):
 @login_required
 def place_bet(request, wager_id: int):
     wager = get_object_or_404(Wager, pk=wager_id)
+    # reject placing a bet against a wager that is already closed or resolved
+    if not wager.open or wager.resolved:
+        return HttpResponseForbidden()
     user: WagerUser = request.user
     # Reject attempting to place a bet on a wager that the user has already bet on
     if bool(Bet.objects.filter(user=user.id, wager=wager_id)):

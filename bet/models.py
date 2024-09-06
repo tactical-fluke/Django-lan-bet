@@ -12,6 +12,7 @@ class Wager(models.Model):
     pot = models.PositiveIntegerField()
     open = models.BooleanField(default=True)
     resolved = models.BooleanField(default=False)
+    close_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.name
