@@ -2,4 +2,5 @@
 **/migrations/
 **/.venv/
 **/launch.json
+**/.idea/
 db.sqlite3

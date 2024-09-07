@@ -1,7 +1,7 @@
 from typing import Any
 from django.db.models.query import QuerySet
 from django.db.models import F
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.urls import reverse
@@ -16,12 +16,12 @@ class WagerListView(generic.ListView):
     template_name = 'bet/home.html'
 
     def get_queryset(self) -> QuerySet[Wager]:
-        return Wager.objects.all()
+        return Wager.objects.filter(resolved=False)
     
 
 @login_required
 def wager_view(request, wager_id: int):
-    wager = get_object_or_404(Wager, pk=wager_id)
+    wager = get_object_or_404(Wager, pk=wager_id, resolved=False)
     options = wager.wageroption_set.all()
     user = request.user
     form = BetForm(wager, user)
