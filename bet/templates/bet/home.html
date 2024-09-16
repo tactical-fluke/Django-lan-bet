@@ -1,5 +1,5 @@
-{% load static %}
-<link rel="stylesheet" href="{% static 'bet/style.css' %}">
+{% extends "bet/base_site.html" %}
+{% block content %}
 <h1>Wagers</h1>
 {% if all_wagers %}
 <ul>
@@ -10,3 +10,4 @@
 {% else %}
 <p>No wagers!</p>
 {% endif %}
+{% endblock %}

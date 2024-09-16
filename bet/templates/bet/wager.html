@@ -1,5 +1,5 @@
-{% load static %}
-<link rel="stylesheet" href="{% static 'bet/style.css' %}">
+{% extends "bet/base_site.html" %}
+{% block content %}
 {% if not wager.open or placed_bet %}
 {% if not wager.open %}
 <p><strong>Bet has closed!</strong></p>
@@ -25,3 +25,4 @@
     <input type="submit" value="Make bet">
 </form>
 {% endif %}
+{% endblock %}

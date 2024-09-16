@@ -131,3 +131,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'bet.WagerUser'
 
 LOGIN_REDIRECT_URL = '/bet/'
+
+LOGOUT_REDIRECT_URL = '/bet/'
